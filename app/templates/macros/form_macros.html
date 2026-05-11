@@ -1,0 +1,43 @@
+{# field_rules: dict field_name -> {required, unique} #}
+{% macro render_form_field(field, field_rules=None) %}
+  {% set rules = field_rules or {} %}
+  {% set req = rules.get(field.name, {}).get('required', false) %}
+  {% set uniq = rules.get(field.name, {}).get('unique', false) %}
+  {% set errcls = ' is-invalid' if field.errors else '' %}
+  {% set dreq = '1' if req else '0' %}
+  {% set duniq = '1' if uniq else '0' %}
+  <div class="mb-3" data-field-name="{{ field.name }}">
+    {% if field.type == 'BooleanField' %}
+      <div class="form-check">
+        {{ field(class="form-check-input" + errcls, data_rule_required=dreq, data_rule_unique=duniq) }}
+        <label class="form-check-label" for="{{ field.id }}">{{ field.label.text }}{% if req %} <span class="text-danger">*</span>{% endif %}</label>
+      </div>
+    {% else %}
+      <label class="form-label" for="{{ field.id }}">{{ field.label.text }}{% if req %} <span class="text-danger" title="Mandatory field">*</span>{% endif %}{% if uniq %} <span class="badge bg-light text-muted border" title="Duplicate check enabled">unique</span>{% endif %}</label>
+      {% if field.type == 'SelectField' %}
+        {{ field(class="form-select" + errcls, data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% elif field.type == 'TextAreaField' %}
+        {{ field(class="form-control" + errcls, rows=4, data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% elif field.type == 'DecimalField' %}
+        {{ field(class="form-control" + errcls, step="any", data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% elif field.type == 'DateField' %}
+        {{ field(class="form-control" + errcls, data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% elif field.type == 'FileField' %}
+        {{ field(class="form-control" + errcls, data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% else %}
+        {{ field(class="form-control" + errcls, data_rule_required=dreq, data_rule_unique=duniq) }}
+      {% endif %}
+    {% endif %}
+    {% for err in field.errors %}
+      <div class="invalid-feedback d-block">{{ err }}</div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro submit_row(form, submit_text=None) %}
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    {% set st = submit_text or 'Save' %}
+    <button type="submit" name="{{ form.submit.name }}" class="btn btn-primary" data-guard-submit-btn>{{ st }}</button>
+    <div class="spinner-border spinner-border-sm text-primary d-none" data-submit-spinner role="status" aria-hidden="true"></div>
+  </div>
+{% endmacro %}

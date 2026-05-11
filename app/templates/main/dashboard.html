@@ -1,0 +1,98 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Dashboard — {{ APP_TITLE }}{% endblock %}
+{% block content %}
+<h4 class="mb-4">Executive Dashboard</h4>
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card card-metric shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Vendors</div>
+        <div class="fs-3 fw-semibold">{{ total_vendors }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-metric shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Bills</div>
+        <div class="fs-3 fw-semibold">{{ total_bills }}</div>
+        <div class="small text-warning">Pending: {{ pending_bills }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-metric shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Paid bills</div>
+        <div class="fs-3 fw-semibold text-success">{{ paid_bills }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-metric shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Item master</div>
+        <div class="fs-3 fw-semibold">{{ total_items }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">Monthly expense ({{ as_of.year }})</div>
+      <div class="card-body">
+        <canvas id="chartExpense" height="120"></canvas>
+      </div>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">GST this month</div>
+      <div class="card-body">
+        <p class="mb-0 fs-4">₹ {{ '%.2f'|format(gst_month) }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">Low stock</div>
+      <ul class="list-group list-group-flush">
+        {% for row in low_stock %}
+        <li class="list-group-item small">{{ row.item_code }} — {{ row.item_name }}</li>
+        {% else %}
+        <li class="list-group-item text-muted">No alerts</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">Recent issues</div>
+      <ul class="list-group list-group-flush">
+        {% for iss in recent_issues %}
+        <li class="list-group-item small">
+          <a href="{{ url_for('issues.issue_detail', iid=iss.id) }}">{{ iss.issue_code }}</a>
+          — {{ iss.employee.employee_name if iss.employee else '' }}
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">None</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const monthly = {{ monthly_expense|tojson }};
+  const labels = Array.from({length: 12}, (_, i) => (i + 1).toString());
+  const dataMap = Object.fromEntries(monthly);
+  const data = labels.map(m => dataMap[parseInt(m, 10)] || 0);
+  new Chart(document.getElementById('chartExpense'), {
+    type: 'bar',
+    data: {
+      labels: labels.map(m => 'M' + m),
+      datasets: [{label: 'Expense', data, backgroundColor: '#1e3a5f'}]
+    },
+    options: {responsive: true, plugins: {legend: {display: false}}}
+  });
+</script>
+{% endblock %}

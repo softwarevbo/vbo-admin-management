@@ -1,0 +1,53 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Vendors</h4>
+  {% if can_manage %}
+  <a class="btn btn-primary" href="{{ url_for('vendors.new_vendor') }}">New vendor</a>
+  {% endif %}
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <input class="form-control" name="q" value="{{ search or '' }}" placeholder="Search name / code / GSTIN">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="active">
+      <option value="">All status</option>
+      <option value="1" {% if active=='1' %}selected{% endif %}>Active</option>
+      <option value="0" {% if active=='0' %}selected{% endif %}>Inactive</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-secondary w-100" type="submit">Filter</button>
+  </div>
+</form>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-striped table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>Code</th><th>Name</th><th>GSTIN</th><th>City</th><th>Active</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in vendors %}
+      <tr>
+        <td>{{ v.vendor_code }}</td>
+        <td>{{ v.vendor_name }}</td>
+        <td>{{ v.gstin_number or '—' }}</td>
+        <td>{{ v.city or '—' }}</td>
+        <td>{{ 'Yes' if v.is_active else 'No' }}</td>
+        <td class="text-end">
+          {% if can_manage %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('vendors.edit_vendor', vid=v.id) }}">Edit</a>
+          <form class="d-inline" method="post" action="{{ url_for('vendors.delete_vendor', vid=v.id) }}" onsubmit="return confirm('Archive vendor?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Archive</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

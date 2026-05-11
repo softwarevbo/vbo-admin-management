@@ -1,0 +1,26 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<h4 class="mb-3">Reports &amp; exports</h4>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6>Excel</h6>
+        <ul class="mb-0">
+          <li><a href="{{ url_for('reports.excel_bills') }}">Vendor bills register</a></li>
+          <li><a href="{{ url_for('reports.excel_inventory') }}">Inventory availability</a></li>
+          <li><a href="{{ url_for('reports.excel_issues') }}">Employee issues</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6>PDF</h6>
+        <p class="small text-muted mb-0">Open any bill and use <strong>Print PDF</strong>, or from the bills list PDF action.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

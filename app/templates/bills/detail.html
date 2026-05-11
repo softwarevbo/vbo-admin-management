@@ -1,0 +1,118 @@
+{% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as fm %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h4 class="mb-0">Bill {{ bill.vendor_bill_no }}</h4>
+    <div class="text-muted small">Register: {{ bill.bill_register_no or 'pending assignment' }} · Vendor: {{ bill.vendor.vendor_name if bill.vendor else '' }}</div>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary" target="_blank" href="{{ url_for('reports.pdf_bill', bid=bill.id) }}">Print PDF</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">Line items</div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead class="table-light"><tr><th>#</th><th>Item</th><th>Qty</th><th>Rate</th><th>GST</th><th>Total</th><th></th></tr></thead>
+          <tbody>
+            {% for line in bill.lines %}
+            <tr>
+              <td>{{ line.line_no }}</td>
+              <td>
+                {% if line.item_master %}{{ line.item_master.item_name }}{% endif %}
+                {% if line.description %}<div class="small text-muted">{{ line.description }}</div>{% endif %}
+              </td>
+              <td>{{ line.quantity }} {{ line.unit }}</td>
+              <td>{{ line.unit_price }}</td>
+              <td>{{ line.gst_percentage }}%</td>
+              <td>{{ line.total_amount }}</td>
+              <td>
+                {% if bill.bill_status in ['pending','under_review','rejected'] and current_user.role.name != 'staff_viewer' %}
+                <form method="post" action="{{ url_for('bills.delete_line', bid=bill.id, lid=line.id) }}" onsubmit="return confirm('Remove line?');" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if bill.bill_status in ['pending','under_review','rejected'] and current_user.role.name != 'staff_viewer' %}
+    <div class="card shadow-sm p-3">
+      <h6 class="mb-3">Add line</h6>
+      <form method="post" class="needs-validation" data-guard-submit data-validate-module="{{ bill_line_module }}" data-bill-id="{{ bill.id }}">
+        {{ line_form.hidden_tag() }}
+        <div class="row g-2">
+          {% for f in field_view %}
+            {% if f.visible and line_form[f.key] is defined %}
+            {% set field = line_form[f.key] %}
+            <div class="{% if field.name == 'description' %}col-12{% else %}col-md-4{% endif %}">
+              {{ fm.render_form_field(field, field_rules) }}
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-2">
+          <button class="btn btn-primary" type="submit" name="add_line" value="1" data-guard-submit-btn>Add line</button>
+          <div class="spinner-border spinner-border-sm text-primary d-none" data-submit-spinner role="status"></div>
+        </div>
+      </form>
+      <p class="small text-muted mt-2 mb-0">Select an item master for each line so stock lots can be created on final approval.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">Totals</div>
+      <div class="card-body">
+        <p class="mb-1">Taxable: ₹ {{ bill.amount }}</p>
+        <p class="mb-1">GST: ₹ {{ bill.gst_amount }}</p>
+        <p class="mb-0 fw-bold">Grand total: ₹ {{ bill.total_amount }}</p>
+      </div>
+    </div>
+
+    {% if current_user.role.name != 'staff_viewer' %}
+    <div class="card shadow-sm p-3">
+      <h6 class="mb-3">Workflow</h6>
+      <form method="post">
+        {{ wf.hidden_tag() }}
+        <div class="mb-2">{{ wf.comments.label(class="form-label") }}{{ wf.comments(class="form-control", rows=2) }}</div>
+        <div class="mb-2">{{ wf.payment_date.label(class="form-label") }}{{ wf.payment_date(class="form-control") }}</div>
+        <div class="d-flex flex-wrap gap-2">
+          {{ wf.submit_review(class="btn btn-outline-primary btn-sm") }}
+          {{ wf.approve(class="btn btn-success btn-sm") }}
+          {{ wf.reject(class="btn btn-danger btn-sm") }}
+          {{ wf.mark_paid(class="btn btn-warning btn-sm") }}
+        </div>
+      </form>
+      <p class="small text-muted mt-2 mb-0">Approvals are multi-level; stock lots are created when fully approved. Accounts marks paid after approval.</p>
+    </div>
+    {% endif %}
+
+    {% if bill.lines and bill.lines[0].stock_lots %}
+    <div class="card shadow-sm mt-3">
+      <div class="card-header bg-white fw-semibold">Stock lots (from lines)</div>
+      <ul class="list-group list-group-flush">
+        {% for line in bill.lines %}
+          {% for lot in line.stock_lots %}
+          <li class="list-group-item small">
+            Lot #{{ lot.id }} — item {{ lot.item_master.item_code if lot.item_master else '' }} —
+            recv {{ lot.quantity_received }}, avail {{ lot.quantity_available }}
+          </li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

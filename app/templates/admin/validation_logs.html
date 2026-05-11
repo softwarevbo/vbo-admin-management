@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<h4 class="mb-3">Validation logs</h4>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <select class="form-select" name="module" onchange="this.form.submit()">
+      <option value="">All modules</option>
+      {% for m in modules %}
+      <option value="{{ m }}" {% if args.get('module')==m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-sm mb-0">
+    <thead class="table-light"><tr><th>Time</th><th>User</th><th>Module</th><th>Form</th><th>OK</th><th>Errors</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="text-nowrap">{{ r.created_at }}</td>
+        <td>{{ r.user_id }}</td>
+        <td>{{ r.module }}</td>
+        <td>{{ r.form_name }}</td>
+        <td>{% if r.success %}yes{% else %}no{% endif %}</td>
+        <td class="small"><code>{{ r.errors }}</code></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

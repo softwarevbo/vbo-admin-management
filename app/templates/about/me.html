@@ -1,0 +1,193 @@
+{% extends 'layouts/base.html' %}
+{% block title %}My Guidance — {{ APP_TITLE }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">About Me / User Guide</li>
+  </ol>
+</nav>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="flex-grow-1">
+            <h5 class="mb-0">Welcome, {{ current_user.full_name }}</h5>
+            <div class="text-muted small">{{ profile.title or current_user.role.name|capitalize }}</div>
+          </div>
+        </div>
+        <dl class="row small mb-0">
+          <dt class="col-5">Role</dt>
+          <dd class="col-7">
+            <span class="badge bg-primary text-uppercase">{{ current_user.role.name }}</span>
+          </dd>
+          <dt class="col-5">Username</dt>
+          <dd class="col-7">{{ current_user.username }}</dd>
+          <dt class="col-5">Email</dt>
+          <dd class="col-7">{{ current_user.email }}</dd>
+          <dt class="col-5">Last login</dt>
+          <dd class="col-7">{{ current_user.last_login_at or "—" }}</dd>
+          <dt class="col-5">Account</dt>
+          <dd class="col-7">
+            {% if current_user.is_active %}
+            <span class="badge bg-success">Active</span>
+            {% else %}
+            <span class="badge bg-secondary">Disabled</span>
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-start border-primary border-4">
+          <div class="card-body">
+            <div class="text-muted small">Pending approvals / bills</div>
+            <div class="fs-3 fw-semibold">{{ summary.pending_bills }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-start border-warning border-4">
+          <div class="card-body">
+            <div class="text-muted small">Low stock alerts</div>
+            <div class="fs-3 fw-semibold">{{ summary.low_stock_count }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-start border-info border-4">
+          <div class="card-body">
+            <div class="text-muted small">Open issues</div>
+            <div class="fs-3 fw-semibold">{{ summary.open_issues }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Your responsibilities</span>
+        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Role-based responsibilities configured by admin."></i>
+      </div>
+      <div class="card-body small">
+        {% if profile.responsibilities_md %}
+          <pre class="mb-0" style="white-space: pre-wrap;">{{ profile.responsibilities_md }}</pre>
+        {% else %}
+          <p class="text-muted mb-0">Responsibilities for this role are not configured yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Guided workflow</span>
+        <i class="bi bi-diagram-3 text-muted" data-bs-toggle="tooltip" title="Typical step-by-step workflow for your role."></i>
+      </div>
+      <div class="card-body small">
+        {% if profile.workflow_md %}
+          <pre class="mb-0" style="white-space: pre-wrap;">{{ profile.workflow_md }}</pre>
+        {% else %}
+          <ol class="mb-0">
+            <li>Create / update master data you are responsible for.</li>
+            <li>Work through bills, inventory, or issues assigned to your role.</li>
+            <li>Use reports and exports to monitor progress.</li>
+          </ol>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Recent activity</span>
+        <span class="small text-muted">Last 10 actions</span>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush small">
+          {% for row in summary.recent_activity %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ row.action }} — {{ row.entity_type }} #{{ row.entity_id or '' }}</span>
+            <span class="text-muted">{{ row.created_at }}</span>
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted">No recorded activity yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold">Accessible modules</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush small">
+          {% for m in profile.modules %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold">{{ m.name }}</div>
+                <div class="text-muted">{{ m.description }}</div>
+                {% if m.actions %}
+                <div class="mt-1">
+                  {% for a in m.actions %}
+                  <span class="badge bg-light text-muted border me-1">{{ a }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+              {% if m.endpoint %}
+              <a href="{{ url_for(m.endpoint) }}" class="btn btn-sm btn-outline-primary ms-2">Open</a>
+              {% endif %}
+            </div>
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted">Modules for this role are not configured.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span>Announcements</span>
+        <i class="bi bi-megaphone text-muted" data-bs-toggle="tooltip" title="System announcements for your role."></i>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush small">
+          {% for a in announcements %}
+          <li class="list-group-item">
+            <div class="fw-semibold">{{ a.title }}</div>
+            <div class="text-muted">{{ a.body }}</div>
+            <div class="text-muted mt-1" style="font-size: 0.75rem;">{{ a.created_at }}</div>
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted">No active announcements.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">Helpful tips</div>
+      <div class="card-body small">
+        <ul class="mb-0">
+          <li>Use the <strong>sidebar</strong> to navigate between modules.</li>
+          <li>Filters above each table help you narrow down data.</li>
+          <li>Export buttons let you download Excel/PDF copies.</li>
+          <li>Look for <span class="text-danger">*</span> to see which fields are mandatory.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

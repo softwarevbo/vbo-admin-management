@@ -1,0 +1,38 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Item master</h4>
+  {% if can_edit %}
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('inventory.categories') }}">Categories</a>
+    <a class="btn btn-primary" href="{{ url_for('inventory.new_item') }}">New item</a>
+  </div>
+  {% endif %}
+</div>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr><th>Code</th><th>Name</th><th>Available (lots)</th><th>Min alert</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.item_code }}</td>
+        <td>{{ it.item_name }}</td>
+        <td>
+          {% set q = stock_map.get(it.id, 0) %}
+          {% set minq = (it.minimum_stock_alert or 0)|float %}
+          <span class="{% if q < minq %}text-danger fw-semibold{% endif %}">{{ q }}</span>
+        </td>
+        <td>{{ it.minimum_stock_alert }}</td>
+        <td class="text-end">
+          {% if can_edit %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('inventory.edit_item', iid=it.id) }}">Edit</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<h4 class="mb-3">Audit log</h4>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3">
+    <input class="form-control" name="user_id" placeholder="User ID" value="{{ args.get('user_id','') }}">
+  </div>
+  <div class="col-md-2"><button class="btn btn-outline-secondary" type="submit">Filter</button></div>
+</form>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-sm mb-0">
+    <thead class="table-light"><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.created_at }}</td>
+        <td>{{ r.user_id }}</td>
+        <td>{{ r.action }}</td>
+        <td>{{ r.entity_type }} #{{ r.entity_id or '' }}</td>
+        <td class="small text-muted">{{ r.details }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

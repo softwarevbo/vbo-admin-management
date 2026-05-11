@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as fm %}
+{% block content %}
+<h4 class="mb-3">Categories</h4>
+<div class="row g-3">
+  <div class="col-md-5">
+    <div class="card shadow-sm p-3">
+      <form method="post" class="needs-validation" data-guard-submit data-validate-module="{{ module }}">
+        {{ form.hidden_tag() }}
+        {{ fm.render_form_field(form.name, field_rules) }}
+        {{ fm.render_form_field(form.description, field_rules) }}
+        <div class="d-flex align-items-center gap-2">
+          {{ form.submit(class="btn btn-primary", **{'data-guard-submit-btn': True}) }}
+          <div class="spinner-border spinner-border-sm text-primary d-none" data-submit-spinner role="status"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <ul class="list-group list-group-flush">
+        {% for c in rows %}
+        <li class="list-group-item d-flex justify-content-between">
+          <span><strong>{{ c.name }}</strong><br><span class="small text-muted">{{ c.description or '' }}</span></span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+<a class="btn btn-link mt-3" href="{{ url_for('inventory.list_items') }}">Back to items</a>
+{% endblock %}

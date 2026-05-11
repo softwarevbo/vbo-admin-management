@@ -1,0 +1,61 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Vendor bills</h4>
+  {% if current_user.role.name != 'staff_viewer' %}
+  <a class="btn btn-primary" href="{{ url_for('bills.new_bill') }}">New bill</a>
+  {% endif %}
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3">
+    <select class="form-select" name="vendor_id">
+      <option value="">Vendor</option>
+      {% for v in vendors %}
+      <option value="{{ v.id }}" {% if args.get('vendor_id') == v.id|string %}selected{% endif %}>{{ v.vendor_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="status">
+      <option value="">Status</option>
+      {% for s in ['pending','under_review','approved','rejected','paid'] %}
+      <option value="{{ s }}" {% if args.get('status')==s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <input type="date" class="form-control" name="from_date" value="{{ args.get('from_date','') }}">
+  </div>
+  <div class="col-md-2">
+    <input type="date" class="form-control" name="to_date" value="{{ args.get('to_date','') }}">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-outline-secondary w-100" type="submit">Filter</button>
+  </div>
+</form>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>Register #</th><th>Vendor bill</th><th>Vendor</th><th>Date</th><th>Status</th><th>Total</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bills %}
+      <tr>
+        <td>{{ b.bill_register_no or '—' }}</td>
+        <td>{{ b.vendor_bill_no }}</td>
+        <td>{{ b.vendor.vendor_name if b.vendor else '' }}</td>
+        <td>{{ b.vendor_bill_date }}</td>
+        <td><span class="badge bg-secondary text-uppercase">{{ b.bill_status }}</span></td>
+        <td>₹ {{ b.total_amount }}</td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('bills.bill_detail', bid=b.id) }}">Open</a>
+          <a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ url_for('reports.pdf_bill', bid=b.id) }}">PDF</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as fm %}
+{% block content %}
+<h4 class="mb-3">{% if vendor %}Edit{% else %}New{% endif %} supplier</h4>
+<form method="post" class="card shadow-sm p-4 needs-validation" data-guard-submit data-validate-module="{{ module }}" {% if vendor %}data-validate-exclude-id="{{ vendor.id }}"{% endif %}>
+  {{ form.hidden_tag() }}
+  <div class="row g-3">
+    {% for f in field_view %}
+      {% if f.visible and form[f.key] is defined %}
+      {% set field = form[f.key] %}
+      <div class="{% if field.name == 'address' %}col-12{% elif field.name == 'is_active' %}col-12{% else %}col-md-4{% endif %}">
+        {{ fm.render_form_field(field, field_rules) }}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="mt-4 d-flex align-items-center gap-2 flex-wrap">
+    {{ form.submit(class="btn btn-primary", **{'data-guard-submit-btn': True}) }}
+    <div class="spinner-border spinner-border-sm text-primary d-none" data-submit-spinner role="status"></div>
+    <a class="btn btn-link" href="{{ url_for('vendors.list_vendors') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

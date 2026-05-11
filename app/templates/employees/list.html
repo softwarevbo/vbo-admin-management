@@ -1,0 +1,36 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Employees</h4>
+  {% if can_edit %}
+  <a class="btn btn-primary" href="{{ url_for('employees.new_employee') }}">New employee</a>
+  {% endif %}
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4"><input class="form-control" name="q" placeholder="Name / code" value="{{ args.get('q','') }}"></div>
+  <div class="col-md-4"><input class="form-control" name="dept" placeholder="Department" value="{{ args.get('dept','') }}"></div>
+  <div class="col-md-2"><button class="btn btn-outline-secondary w-100" type="submit">Filter</button></div>
+</form>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr><th>Code</th><th>Name</th><th>Dept</th><th>Designation</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for e in rows %}
+      <tr>
+        <td>{{ e.employee_code }}</td>
+        <td>{{ e.employee_name }}</td>
+        <td>{{ e.department or (e.department_rel.name if e.department_rel else '—') }}</td>
+        <td>{{ e.designation or '—' }}</td>
+        <td class="text-end">
+          {% if can_edit %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('employees.edit_employee', eid=e.id) }}">Edit</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

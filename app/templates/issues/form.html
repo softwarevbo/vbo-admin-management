@@ -1,0 +1,42 @@
+{% extends 'layouts/base.html' %}
+{% import 'macros/form_macros.html' as fm %}
+{% block content %}
+<h4 class="mb-3">Issue stock to employee</h4>
+<form method="post" class="card shadow-sm p-4 needs-validation" data-guard-submit data-validate-module="{{ module }}">
+  {{ form.hidden_tag() }}
+  <div class="row g-3 mb-3">
+    {% for f in field_view %}
+      {% if f.visible and form[f.key] is defined %}
+      {% set field = form[f.key] %}
+      <div class="col-md-6">
+        {{ fm.render_form_field(field, field_rules) }}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <h6 class="mb-2">Stock lines (lot + quantity)</h6>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Lot (item · avail)</th><th>Quantity</th></tr></thead>
+      <tbody>
+        {% for lot in lots %}
+        <tr>
+          <td>
+            <input type="hidden" name="lot_id" value="{{ lot.id }}">
+            #{{ lot.id }} — {{ lot.item_master.item_code if lot.item_master else '' }} — {{ lot.item_master.item_name if lot.item_master else '' }}
+            <span class="text-muted">(avail {{ lot.quantity_available }})</span>
+          </td>
+          <td style="width:160px"><input class="form-control form-control-sm" type="text" name="qty" placeholder="leave blank to skip" autocomplete="off"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="small text-muted mb-3">Only rows with a quantity are issued; server validates availability.</p>
+  <div class="d-flex align-items-center gap-2">
+    {{ form.submit(class="btn btn-primary", **{'data-guard-submit-btn': True}) }}
+    <div class="spinner-border spinner-border-sm text-primary d-none" data-submit-spinner role="status"></div>
+    <a class="btn btn-link" href="{{ url_for('issues.list_issues') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
