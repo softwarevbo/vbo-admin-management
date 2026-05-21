@@ -1,10 +1,47 @@
-venv/
-.venv/
+# Django
+*.log
+*.pot
+*.pyc
 __pycache__/
-*.py[cod]
-*.egg-info/
-.env
-instance/
 *.sqlite3
-.mypy_cache/
+db.sqlite3
+media/
+staticfiles/
+
+# Django migrations cache
+# (Optional; usually migrations are committed)
+# __pycache__ is already ignored above
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Node (if present)
+node_modules/
+
+# OS / Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Misc
+.coverage
+htmlcov/
 .pytest_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Secrets
+*.pem
+
