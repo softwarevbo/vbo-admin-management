@@ -274,19 +274,34 @@ function renderVendorsTable() {
     tbody.innerHTML = '';
     
     if (vendors.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center">No vendor bank accounts found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No vendor bank accounts found.</td></tr>`;
         return;
     }
 
     vendors.forEach(v => {
+        let contactHTML = '';
+        if (v.contact_person) contactHTML += `<div style="margin-bottom: 3px;"><i class="fa-solid fa-user text-muted" style="width: 14px; margin-right: 4px;"></i>${escapeHTML(v.contact_person)}</div>`;
+        if (v.contact_email) contactHTML += `<div style="margin-bottom: 3px;"><i class="fa-solid fa-envelope text-muted" style="width: 14px; margin-right: 4px;"></i><a href="mailto:${escapeHTML(v.contact_email)}" style="color: var(--primary-color); text-decoration: none;">${escapeHTML(v.contact_email)}</a></div>`;
+        if (v.contact_number) contactHTML += `<div style="margin-bottom: 3px;"><i class="fa-solid fa-phone text-muted" style="width: 14px; margin-right: 4px;"></i>${escapeHTML(v.contact_number)}</div>`;
+        if (!contactHTML) contactHTML = '<span class="text-muted">N/A</span>';
+
+        const bankHTML = `
+            <div><strong>${escapeHTML(v.bank_name)}</strong></div>
+            <div style="font-size: 0.85rem; margin-top: 2px;">A/C: <code>${escapeHTML(v.account_number)}</code></div>
+            <div style="font-size: 0.85rem;">IFSC: <code>${escapeHTML(v.ifsc_code)}</code> (${escapeHTML(v.branch)})</div>
+        `;
+
+        const addressHTML = v.address 
+            ? `<div style="max-width: 250px; font-size: 0.9rem; white-space: pre-wrap;">${escapeHTML(v.address)}</div>` 
+            : '<span class="text-muted">N/A</span>';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${v.id}</td>
             <td><strong>${escapeHTML(v.vendor_name)}</strong></td>
-            <td>${escapeHTML(v.bank_name)}</td>
-            <td><code>${escapeHTML(v.account_number)}</code></td>
-            <td>${escapeHTML(v.branch)}</td>
-            <td><code>${escapeHTML(v.ifsc_code)}</code></td>
+            <td>${contactHTML}</td>
+            <td>${bankHTML}</td>
+            <td>${addressHTML}</td>
             <td class="text-center">
                 <div class="actions-cell">
                     <button class="btn btn-secondary btn-xs" onclick="editVendor(${v.id})"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -604,8 +619,12 @@ async function saveVendor(event) {
     const account_number = document.getElementById('vendor-account').value;
     const branch = document.getElementById('vendor-branch').value;
     const ifsc_code = document.getElementById('vendor-ifsc').value;
+    const contact_person = document.getElementById('vendor-contact-person').value;
+    const contact_number = document.getElementById('vendor-contact-number').value;
+    const contact_email = document.getElementById('vendor-contact-email').value;
+    const address = document.getElementById('vendor-address').value;
 
-    const payload = { vendor_name, bank_name, account_number, branch, ifsc_code };
+    const payload = { vendor_name, bank_name, account_number, branch, ifsc_code, contact_person, contact_number, contact_email, address };
     const url = id ? `/api/vendors/${id}/` : '/api/vendors/';
     const method = id ? 'PUT' : 'POST';
 
@@ -640,6 +659,10 @@ async function editVendor(id) {
         document.getElementById('vendor-account').value = v.account_number;
         document.getElementById('vendor-branch').value = v.branch;
         document.getElementById('vendor-ifsc').value = v.ifsc_code;
+        document.getElementById('vendor-contact-person').value = v.contact_person || '';
+        document.getElementById('vendor-contact-number').value = v.contact_number || '';
+        document.getElementById('vendor-contact-email').value = v.contact_email || '';
+        document.getElementById('vendor-address').value = v.address || '';
     } catch (err) {
         console.error(err);
     }
@@ -668,6 +691,7 @@ function openBillModal(isEdit = false) {
     const title = document.getElementById('bill-modal-title');
     resetForm('bill-form');
     document.getElementById('bill-sl-no').value = '';
+    document.getElementById('bill-amount').value = '';
     title.innerText = isEdit ? "Modify Admin Bill Entry" : "Create Admin Bill Entry";
     
     // Default dates to today
@@ -690,11 +714,12 @@ async function saveBill(event) {
     const received_date = document.getElementById('bill-received').value;
     const bill_received_date = document.getElementById('bill-received-office').value;
     const processed_date = document.getElementById('bill-processed').value || null;
+    const amount = document.getElementById('bill-amount').value || null;
 
     const payload = { 
         vendor_id, vendor_bill_no, vendor_bill_date, 
         div_section, indent_end_user, received_date, 
-        bill_received_date, processed_date 
+        bill_received_date, processed_date, amount
     };
 
     const url = id ? `/api/bills/${id}/` : '/api/bills/';
@@ -734,6 +759,7 @@ async function editBill(sl_no) {
         document.getElementById('bill-received').value = bill.received_date;
         document.getElementById('bill-received-office').value = bill.bill_received_date;
         document.getElementById('bill-processed').value = bill.processed_date || '';
+        document.getElementById('bill-amount').value = bill.amount || '';
     } catch (err) {
         console.error(err);
     }
@@ -957,12 +983,11 @@ function filterVendors() {
     rows.forEach(row => {
         if (row.cells.length < 2) return;
         const name = row.cells[1].innerText.toLowerCase();
-        const bank = row.cells[2].innerText.toLowerCase();
-        const acc = row.cells[3].innerText.toLowerCase();
-        const branch = row.cells[4].innerText.toLowerCase();
-        const ifsc = row.cells[5].innerText.toLowerCase();
+        const contacts = row.cells[2].innerText.toLowerCase();
+        const bankDetails = row.cells[3].innerText.toLowerCase();
+        const address = row.cells[4].innerText.toLowerCase();
         
-        if (name.includes(query) || bank.includes(query) || acc.includes(query) || branch.includes(query) || ifsc.includes(query)) {
+        if (name.includes(query) || contacts.includes(query) || bankDetails.includes(query) || address.includes(query)) {
             row.style.display = '';
         } else {
             row.style.display = 'none';

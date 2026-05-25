@@ -18,6 +18,12 @@ class VendorBankAccount(models.Model):
     account_number = models.CharField(max_length=50)
     branch = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=20)
+    
+    # Optional Contact and Information fields
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.vendor_name} - {self.bank_name} ({self.account_number[-4:] if len(self.account_number) > 4 else self.account_number})"
@@ -27,7 +33,7 @@ class AdminBillInventory(models.Model):
     vendor = models.ForeignKey(VendorBankAccount, on_delete=models.CASCADE, related_name="bills")
     vendor_bill_no = models.CharField(max_length=100)
     vendor_bill_date = models.DateField()
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Auto-calculated total sum of all items")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), help_text="Total sum of all items (auto-calculated if items exist, or manually entered)")
     div_section = models.CharField(max_length=100, help_text="Division or Section")
     indent_end_user = models.CharField(max_length=100, help_text="Indent End User")
     received_date = models.DateField()
@@ -35,13 +41,15 @@ class AdminBillInventory(models.Model):
     processed_date = models.DateField(null=True, blank=True)
 
     def recalculate_total(self):
-        # Calculate sum of all associated item amounts
-        total = self.items.aggregate(total_sum=Sum('amount'))['total_sum'] or Decimal('0.00')
-        if self.amount != total:
-            self.amount = total
-            # Use save(update_fields=...) or standard save to avoid infinite recursion if signals are used
-            AdminBillInventory.objects.filter(pk=self.pk).update(amount=total)
-        return total
+        # Calculate sum of all associated item amounts if items exist
+        if self.items.exists():
+            total = self.items.aggregate(total_sum=Sum('amount'))['total_sum'] or Decimal('0.00')
+            if self.amount != total:
+                self.amount = total
+                # Use save(update_fields=...) or standard save to avoid infinite recursion if signals are used
+                AdminBillInventory.objects.filter(pk=self.pk).update(amount=total)
+            return total
+        return self.amount
 
     def __str__(self):
         return f"Bill {self.vendor_bill_no} ({self.vendor.vendor_name})"

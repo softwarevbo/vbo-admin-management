@@ -1,0 +1,603 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin & Inventory Management System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{% static 'core/style.css' %}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fa-solid fa-server-glow logo-icon"></i>
+                <h2>VBO Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-tab="dashboard-tab">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-btn" data-tab="bills-tab">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Bill Inventory</span>
+                </button>
+                <button class="nav-btn" data-tab="items-tab">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>Item Management</span>
+                </button>
+                <button class="nav-btn" data-tab="stock-tab">
+                    <i class="fa-solid fa-warehouse"></i>
+                    <span>Stock Inventory</span>
+                </button>
+                <button class="nav-btn" data-tab="vendors-tab">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>Vendor Accounts</span>
+                </button>
+                <button class="nav-btn" data-tab="employees-tab">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Employee Details</span>
+                </button>
+                <button class="nav-btn" data-tab="logs-tab">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <span>System Logs</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Status: <span class="badge success">Live</span></p>
+                <small>v1.0.0 &copy; 2026</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p id="current-datetime"><i class="fa-regular fa-clock"></i> Loading date & time...</p>
+                </div>
+                <div class="header-actions" style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-secondary" id="theme-toggle-btn" onclick="toggleTheme()">
+                        <i class="fa-solid fa-sun"></i> <span>Light Mode</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="quickAddAction()">
+                        <i class="fa-solid fa-plus"></i> Quick Create
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Panels -->
+            <div class="content-wrapper">
+                
+                <!-- PANEL: Dashboard Tab -->
+                <section id="dashboard-tab" class="tab-panel active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper amount-color">
+                                <i class="fa-solid fa-indian-rupee-sign"></i>
+                            </div>
+                            <div class="stat-details">
+                                <p class="stat-label">Total Expenditure</p>
+                                <h3 id="stat-total-amount" class="stat-value">₹0.00</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper bills-color">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-details">
+                                <p class="stat-label">Total Bills</p>
+                                <h3 id="stat-total-bills" class="stat-value">0</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper items-color">
+                                <i class="fa-solid fa-box"></i>
+                            </div>
+                            <div class="stat-details">
+                                <p class="stat-label">Issued Items</p>
+                                <h3 id="stat-issued-items" class="stat-value">0</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-wrapper employees-color">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </div>
+                            <div class="stat-details">
+                                <p class="stat-label">Total Employees</p>
+                                <h3 id="stat-total-employees" class="stat-value">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <h3><i class="fa-solid fa-chart-line"></i> Monthly Bill Expenditure</h3>
+                            <div class="chart-container">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3><i class="fa-solid fa-chart-pie"></i> Division / Section Wise Share</h3>
+                            <div class="chart-container">
+                                <canvas id="divisionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PANEL: Bill Inventory Tab -->
+                <section id="bills-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="bill-search" placeholder="Search bills by vendor name or bill no..." oninput="filterBills()">
+                        </div>
+                        <button class="btn btn-accent" onclick="openBillModal()"><i class="fa-solid fa-plus"></i> Add New Bill</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="bills-table">
+                            <thead>
+                                <tr>
+                                    <th>Sl. No</th>
+                                    <th>Vendor Company Name</th>
+                                    <th>Bill No</th>
+                                    <th>Bill Date</th>
+                                    <th>Div / Section</th>
+                                    <th>Indent End User</th>
+                                    <th>Received Date</th>
+                                    <th>Bill Received Date</th>
+                                    <th>Processed Date</th>
+                                    <th class="text-right">Total Amount</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bills-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- PANEL: Item Management Tab -->
+                <section id="items-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="item-search" placeholder="Search items by name, bill no or status..." oninput="filterItems()">
+                        </div>
+                        <button class="btn btn-accent" onclick="openItemModal()"><i class="fa-solid fa-plus"></i> Add Item to Bill</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="items-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Item Name</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>GST %</th>
+                                    <th>Total Amount</th>
+                                    <th>Bill Ref No</th>
+                                    <th>Issued To</th>
+                                    <th>Issue Status</th>
+                                    <th>Issue Date</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- PANEL: Stock Inventory Tab -->
+                <section id="stock-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="stock-search" placeholder="Search stock items..." oninput="filterStock()">
+                        </div>
+                        <span class="log-indicator"><i class="fa-solid fa-warehouse"></i> Current Stock Balances</span>
+                    </div>
+                    <div class="table-container">
+                        <table id="stock-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th class="text-center">Total Quantity Purchased</th>
+                                    <th class="text-center">Total Quantity Issued</th>
+                                    <th class="text-center">Available Stock Qty</th>
+                                    <th class="text-right">Total In-Stock Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- PANEL: Vendor Accounts Tab -->
+                <section id="vendors-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="vendor-search" placeholder="Search vendors..." oninput="filterVendors()">
+                        </div>
+                        <button class="btn btn-accent" onclick="openVendorModal()"><i class="fa-solid fa-plus"></i> Add Vendor</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="vendors-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Vendor Company Name</th>
+                                    <th>Contact Details</th>
+                                    <th>Bank Details</th>
+                                    <th>Address / Info</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vendors-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- PANEL: Employee Details Tab -->
+                <section id="employees-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="employee-search" placeholder="Search employees..." oninput="filterEmployees()">
+                        </div>
+                        <button class="btn btn-accent" onclick="openEmployeeModal()"><i class="fa-solid fa-plus"></i> Add Employee</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="employees-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Email ID</th>
+                                    <th>Mobile Number</th>
+                                    <th>Designation</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- PANEL: System Logs Tab -->
+                <section id="logs-tab" class="tab-panel">
+                    <div class="panel-header">
+                        <div class="panel-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="log-search" placeholder="Search log description or model..." oninput="filterLogs()">
+                        </div>
+                        <span class="log-indicator"><i class="fa-solid fa-database"></i> Real-time DB logs</span>
+                    </div>
+                    <div class="table-container">
+                        <table id="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Model</th>
+                                    <th>ID</th>
+                                    <th>Record Name</th>
+                                    <th>Changed Fields Detail</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Employee Form -->
+    <div id="employee-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-btn" onclick="closeModal('employee-modal')">&times;</span>
+            <h2 id="employee-modal-title">Add Employee</h2>
+            <form id="employee-form" onsubmit="saveEmployee(event)">
+                <div class="form-group">
+                    <label for="emp-id">Employee ID *</label>
+                    <input type="text" id="emp-id" required placeholder="e.g. EMP001">
+                </div>
+                <div class="form-group">
+                    <label for="emp-name">Full Name *</label>
+                    <input type="text" id="emp-name" required placeholder="e.g. Kei">
+                </div>
+                <div class="form-group">
+                    <label for="emp-email">Email ID *</label>
+                    <input type="email" id="emp-email" required placeholder="e.g. kei@company.com">
+                </div>
+                <div class="form-group">
+                    <label for="emp-mobile">Mobile Number *</label>
+                    <input type="tel" id="emp-mobile" required placeholder="e.g. +91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label for="emp-designation">Designation *</label>
+                    <input type="text" id="emp-designation" required placeholder="e.g. System Administrator">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('employee-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Vendor Form -->
+    <div id="vendor-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-btn" onclick="closeModal('vendor-modal')">&times;</span>
+            <h2 id="vendor-modal-title">Add Vendor Bank details</h2>
+            <form id="vendor-form" onsubmit="saveVendor(event)">
+                <input type="hidden" id="vendor-id-field">
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-building"></i> Company Information</h3>
+                <div class="form-group">
+                    <label for="vendor-name">Vendor Company Name *</label>
+                    <input type="text" id="vendor-name" required placeholder="e.g. Delta Computronics Ltd.">
+                </div>
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-address-card"></i> Optional Contact Details</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-contact-person">Contact Person</label>
+                        <input type="text" id="vendor-contact-person" placeholder="e.g. Kei">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-contact-number">Contact Phone/Mobile</label>
+                        <input type="text" id="vendor-contact-number" placeholder="e.g. +91 9876543210">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="vendor-contact-email">Contact Email / Gmail</label>
+                    <input type="email" id="vendor-contact-email" placeholder="e.g. contact@vendor.com">
+                </div>
+                <div class="form-group">
+                    <label for="vendor-address">Vendor Address / Info</label>
+                    <textarea id="vendor-address" rows="2" placeholder="e.g. 123 Tech Park, Chennai"></textarea>
+                </div>
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-credit-card"></i> Bank Account Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-bank">Bank Name *</label>
+                        <input type="text" id="vendor-bank" required placeholder="e.g. State Bank of India">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-account">Account Number *</label>
+                        <input type="text" id="vendor-account" required placeholder="e.g. 30283948593">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-branch">Branch Name *</label>
+                        <input type="text" id="vendor-branch" required placeholder="e.g. Central Circle, Chennai">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-ifsc">IFSC Code *</label>
+                        <input type="text" id="vendor-ifsc" required placeholder="e.g. SBIN0001234">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('vendor-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Vendor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Bill Form -->
+    <div id="bill-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-btn" onclick="closeModal('bill-modal')">&times;</span>
+            <h2 id="bill-modal-title">Create Admin Bill Entry</h2>
+            <form id="bill-form" onsubmit="saveBill(event)">
+                <input type="hidden" id="bill-sl-no">
+                <div class="form-group">
+                    <label for="bill-vendor">Select Vendor Bank details *</label>
+                    <select id="bill-vendor" required>
+                        <option value="">-- Choose Vendor --</option>
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bill-no">Vendor Company Bill No. *</label>
+                        <input type="text" id="bill-no" required placeholder="e.g. INV/2026/089">
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-date">Vendor Bill Date *</label>
+                        <input type="date" id="bill-date" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bill-div">Division / Section *</label>
+                        <input type="text" id="bill-div" required placeholder="e.g. IT Section / Admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-indent">Indent End User *</label>
+                        <input type="text" id="bill-indent" required placeholder="e.g. HOD Office / General Admin">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bill-received">Received Date *</label>
+                        <input type="date" id="bill-received" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-received-office">Bill Received Date *</label>
+                        <input type="date" id="bill-received-office" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bill-processed">Processed Date (Optional)</label>
+                        <input type="date" id="bill-processed">
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-amount">Total Amount (₹) (Optional - auto-calculated if items exist)</label>
+                        <input type="number" id="bill-amount" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('bill-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Bill Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Item Form (with live calculation) -->
+    <div id="item-modal" class="modal">
+        <div class="modal-content glass">
+            <span class="close-btn" onclick="closeModal('item-modal')">&times;</span>
+            <h2 id="item-modal-title">Add Item to Bill</h2>
+            <form id="item-form" onsubmit="saveItem(event)">
+                <input type="hidden" id="item-id-field">
+                
+                <div class="form-group">
+                    <label for="item-bill">Associate with Bill *</label>
+                    <select id="item-bill" required>
+                        <option value="">-- Choose Bill --</option>
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="item-name">Item Name *</label>
+                    <input type="text" id="item-name" required placeholder="e.g. ThinkPad L14 Laptop">
+                </div>
+
+                <div class="form-group">
+                    <label for="item-desc">Description</label>
+                    <textarea id="item-desc" rows="2" placeholder="e.g. Intel Core i5, 16GB RAM, 512GB SSD"></textarea>
+                </div>
+
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label for="item-qty">Quantity *</label>
+                        <input type="number" id="item-qty" required min="1" value="1" oninput="calculateItemTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-price">Unit Price (₹) *</label>
+                        <input type="number" id="item-price" required min="0.01" step="0.01" placeholder="0.00" oninput="calculateItemTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-gst">GST % *</label>
+                        <select id="item-gst" required onchange="calculateItemTotal()">
+                            <option value="0">0% (Nil)</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18% (Standard)</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Live Mathematical Calculation Widget -->
+                <div class="live-calculation-box">
+                    <div class="calc-row">
+                        <span>Subtotal (Qty &times; Unit Price):</span>
+                        <span id="calc-subtotal">₹0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span>GST Amount:</span>
+                        <span id="calc-gst-amount">₹0.00</span>
+                    </div>
+                    <div class="calc-divider"></div>
+                    <div class="calc-row total">
+                        <span>Calculated Total Amount:</span>
+                        <span id="calc-total">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Issue Details Section -->
+                <div class="issue-section-header">
+                    <h3><i class="fa-solid fa-truck-ramp-box"></i> Optional: Immediate Item Issue</h3>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="item-employee">Issue to Employee</label>
+                        <select id="item-employee" onchange="toggleIssueStatus()">
+                            <option value="">-- Keep in Stock --</option>
+                            <!-- Dynamic options -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-issue-date">Issue Date</label>
+                        <input type="date" id="item-issue-date">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('item-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: System Log View (JSON Diff Viewer) -->
+    <div id="log-modal" class="modal">
+        <div class="modal-content glass log-detail-modal">
+            <span class="close-btn" onclick="closeModal('log-modal')">&times;</span>
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> System Audit Log Details</h2>
+            
+            <div class="log-meta">
+                <div><strong>Action:</strong> <span id="log-detail-action" class="badge"></span></div>
+                <div><strong>Model:</strong> <span id="log-detail-model"></span></div>
+                <div><strong>Record ID:</strong> <span id="log-detail-record-id"></span></div>
+                <div><strong>Record Name:</strong> <span id="log-detail-record-name"></span></div>
+                <div><strong>Timestamp:</strong> <span id="log-detail-timestamp"></span></div>
+            </div>
+
+            <div class="log-diff-container">
+                <h3>Modified Fields / Fields State</h3>
+                <pre id="log-detail-diff"></pre>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="closeModal('log-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script loading -->
+    <script src="{% static 'core/app.js' %}"></script>
+</body>
+</html>

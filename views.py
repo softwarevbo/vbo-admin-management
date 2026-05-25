@@ -143,7 +143,11 @@ def vendor_list(request):
                 bank_name=data.get('bank_name'),
                 account_number=data.get('account_number'),
                 branch=data.get('branch'),
-                ifsc_code=data.get('ifsc_code')
+                ifsc_code=data.get('ifsc_code'),
+                contact_person=data.get('contact_person'),
+                contact_email=data.get('contact_email'),
+                contact_number=data.get('contact_number'),
+                address=data.get('address')
             )
             return JsonResponse({'status': 'success', 'message': 'Vendor details created', 'id': vendor.id}, status=201)
         except Exception as e:
@@ -163,7 +167,11 @@ def vendor_detail(request, pk):
             'bank_name': vendor.bank_name,
             'account_number': vendor.account_number,
             'branch': vendor.branch,
-            'ifsc_code': vendor.ifsc_code
+            'ifsc_code': vendor.ifsc_code,
+            'contact_person': vendor.contact_person,
+            'contact_email': vendor.contact_email,
+            'contact_number': vendor.contact_number,
+            'address': vendor.address
         })
     
     elif request.method == 'PUT':
@@ -174,6 +182,10 @@ def vendor_detail(request, pk):
             vendor.account_number = data.get('account_number', vendor.account_number)
             vendor.branch = data.get('branch', vendor.branch)
             vendor.ifsc_code = data.get('ifsc_code', vendor.ifsc_code)
+            vendor.contact_person = data.get('contact_person', vendor.contact_person)
+            vendor.contact_email = data.get('contact_email', vendor.contact_email)
+            vendor.contact_number = data.get('contact_number', vendor.contact_number)
+            vendor.address = data.get('address', vendor.address)
             vendor.save()
             return JsonResponse({'status': 'success', 'message': 'Vendor details updated'})
         except Exception as e:
@@ -220,7 +232,7 @@ def bill_list(request):
                 received_date=parse_date(data.get('received_date')),
                 bill_received_date=parse_date(data.get('bill_received_date')),
                 processed_date=parse_date(data.get('processed_date')),
-                amount=Decimal('0.00')  # initially 0, updated by items
+                amount=parse_decimal(data.get('amount'), 0.00)
             )
             return JsonResponse({'status': 'success', 'message': 'Bill created', 'sl_no': bill.sl_no}, status=201)
         except Exception as e:
@@ -265,6 +277,8 @@ def bill_detail(request, pk):
             bill.received_date = parse_date(data.get('received_date')) or bill.received_date
             bill.bill_received_date = parse_date(data.get('bill_received_date')) or bill.bill_received_date
             bill.processed_date = parse_date(data.get('processed_date')) if 'processed_date' in data else bill.processed_date
+            if 'amount' in data:
+                bill.amount = parse_decimal(data.get('amount'), bill.amount)
             bill.save()
             bill.recalculate_total()
             return JsonResponse({'status': 'success', 'message': 'Bill updated'})

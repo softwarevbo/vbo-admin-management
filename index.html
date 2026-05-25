@@ -248,10 +248,9 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Vendor Company Name</th>
-                                    <th>Bank Name</th>
-                                    <th>Account Number</th>
-                                    <th>Branch</th>
-                                    <th>IFSC Code</th>
+                                    <th>Contact Details</th>
+                                    <th>Bank Details</th>
+                                    <th>Address / Info</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -364,26 +363,55 @@
             <h2 id="vendor-modal-title">Add Vendor Bank details</h2>
             <form id="vendor-form" onsubmit="saveVendor(event)">
                 <input type="hidden" id="vendor-id-field">
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-building"></i> Company Information</h3>
                 <div class="form-group">
                     <label for="vendor-name">Vendor Company Name *</label>
                     <input type="text" id="vendor-name" required placeholder="e.g. Delta Computronics Ltd.">
                 </div>
-                <div class="form-group">
-                    <label for="vendor-bank">Bank Name *</label>
-                    <input type="text" id="vendor-bank" required placeholder="e.g. State Bank of India">
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-address-card"></i> Optional Contact Details</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-contact-person">Contact Person</label>
+                        <input type="text" id="vendor-contact-person" placeholder="e.g. Kei">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-contact-number">Contact Phone/Mobile</label>
+                        <input type="text" id="vendor-contact-number" placeholder="e.g. +91 9876543210">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="vendor-account">Account Number *</label>
-                    <input type="text" id="vendor-account" required placeholder="e.g. 30283948593">
+                    <label for="vendor-contact-email">Contact Email / Gmail</label>
+                    <input type="email" id="vendor-contact-email" placeholder="e.g. contact@vendor.com">
                 </div>
                 <div class="form-group">
-                    <label for="vendor-branch">Branch Name *</label>
-                    <input type="text" id="vendor-branch" required placeholder="e.g. Central Circle, Chennai">
+                    <label for="vendor-address">Vendor Address / Info</label>
+                    <textarea id="vendor-address" rows="2" placeholder="e.g. 123 Tech Park, Chennai"></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="vendor-ifsc">IFSC Code *</label>
-                    <input type="text" id="vendor-ifsc" required placeholder="e.g. SBIN0001234">
+                
+                <h3 class="modal-section-title"><i class="fa-solid fa-credit-card"></i> Bank Account Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-bank">Bank Name *</label>
+                        <input type="text" id="vendor-bank" required placeholder="e.g. State Bank of India">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-account">Account Number *</label>
+                        <input type="text" id="vendor-account" required placeholder="e.g. 30283948593">
+                    </div>
                 </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="vendor-branch">Branch Name *</label>
+                        <input type="text" id="vendor-branch" required placeholder="e.g. Central Circle, Chennai">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendor-ifsc">IFSC Code *</label>
+                        <input type="text" id="vendor-ifsc" required placeholder="e.g. SBIN0001234">
+                    </div>
+                </div>
+                
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('vendor-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Vendor</button>
@@ -436,9 +464,15 @@
                         <input type="date" id="bill-received-office" required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="bill-processed">Processed Date (Optional)</label>
-                    <input type="date" id="bill-processed">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bill-processed">Processed Date (Optional)</label>
+                        <input type="date" id="bill-processed">
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-amount">Total Amount (₹) (Optional - auto-calculated if items exist)</label>
+                        <input type="number" id="bill-amount" min="0" step="0.01" placeholder="0.00">
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('bill-modal')">Cancel</button>
